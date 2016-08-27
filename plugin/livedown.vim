@@ -14,27 +14,26 @@ if !exists('g:livedown_port')
   let g:livedown_port = 1337
 endif
 
+function! s:LivedownRun(command)
+  let a:platform_command = has('win32') ?
+    \ "start /B " . a:command :
+    \ a:command . " &"
+  let a:Func = has('nvim') ?
+    \ function('jobstart') :
+    \ function('system')
+
+  silent! call a:Func(a:platform_command)
+endfunction
+
 function! s:LivedownPreview()
-  if has('win32')
-    silent! call system("start /B " . "livedown start \"" . expand('%:p') . "\"" .
+  call s:LivedownRun("livedown start \"" . expand('%:p') . "\"" .
       \ (g:livedown_open ? " --open" : "") .
       \ " --port " . g:livedown_port .
-      \ (exists(g:livedown_browser) ? " --browser " . g:livedown_browser : "")
-  else 
-    call system("livedown start '" . expand('%:p') . "'" .
-      \ (g:livedown_open ? " --open" : "") .
-      \ (exists("g:livedown_browser") ? " --browser " . g:livedown_browser : "") .
-      \ " --port " . g:livedown_port .
-      \ " &")
-  endif
+      \ (exists("g:livedown_browser") ? " --browser " . g:livedown_browser : ""))
 endfunction
 
 function! s:LivedownKill()
-  if has('win32')
-    silent! call system("start /B livedown stop --port " . g:livedown_port)
-  else 
-    call system("livedown stop --port " . g:livedown_port . " &")
-  endif
+  call s:LivedownRun("livedown stop --port " . g:livedown_port)
 endfunction
 
 function! s:LivedownToggle()
@@ -44,3 +43,4 @@ function! s:LivedownToggle()
 		call s:LivedownKill() | unlet! s:livedownPreviewFlag
 	endif
 endfunction
+
